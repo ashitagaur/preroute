@@ -5,6 +5,7 @@ interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
   label?: string;
   error?: string;
   options: { value: string; label: string }[];
+  placeholder?: string;
 }
 
 export const Select = forwardRef<HTMLSelectElement, SelectProps>(
@@ -12,12 +13,13 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
     return (
       <div className={`${styles.container} ${className || ''}`}>
         {label && <label className={styles.label}>{label}</label>}
-        <select 
-          ref={ref} 
-          className={`${styles.select} ${error ? styles.selectError : ''}`} 
+        <select
+          ref={ref}
+          className={`${styles.select} ${error ? styles.selectError : ''}`}
+          required
           {...props}
         >
-          <option value="" disabled hidden>Choose from Drop-down</option>
+          <option value="" disabled hidden>{props.placeholder || 'Choose from Drop-down'}</option>
           {options.map((opt) => (
             <option key={opt.value} value={opt.value}>{opt.label}</option>
           ))}

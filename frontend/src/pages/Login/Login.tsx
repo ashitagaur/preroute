@@ -34,12 +34,12 @@ export const Login: React.FC = () => {
     try {
       setIsLoading(true);
       setError(null);
-      const res: any = await authService.login(data.userId, data.password);
-      if (res.success) {
+      const res: any = await authService.login(data.userId.trim(), data.password);
+      if (res.success || res.status === 'success') {
         setAuth(res.data.token, res.data.user);
         navigate('/dashboard');
       } else {
-        setError('Login failed');
+        setError(res.message || 'Login failed');
       }
     } catch (err: any) {
       setError(err.message || 'Invalid credentials');

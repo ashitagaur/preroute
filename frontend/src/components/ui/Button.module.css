@@ -26,12 +26,12 @@
 }
 
 .secondary {
-  background-color: var(--bg-main);
-  color: var(--text-primary);
-  border: 1px solid var(--border-light);
+  background-color: #F8FAFC;
+  color: #475569;
+  border: none;
 }
 .secondary:hover:not(:disabled) {
-  background-color: var(--border-light);
+  background-color: #F1F5F9;
 }
 
 .outline {

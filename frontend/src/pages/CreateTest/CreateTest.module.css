@@ -2,41 +2,46 @@
   background-color: var(--bg-card);
   padding: 2rem;
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
-  border: 1px solid var(--border-light);
+  /* The figma design has no shadow and a very faint border if any, let's keep it clean */
+  box-shadow: none;
+  border: 1px solid #E2E8F0;
+  max-width: 1200px;
 }
 
 .breadcrumb {
   font-size: 0.875rem;
-  color: var(--text-secondary);
+  color: #64748B;
   margin-bottom: 2rem;
 }
 
 .breadcrumb span {
-  color: var(--text-primary);
+  color: #0F172A;
+  font-weight: 500;
 }
 
 .tabs {
+  display: inline-flex;
+  margin-bottom: 2.5rem;
   display: flex;
   gap: 1rem;
-  margin-bottom: 3rem;
+  margin-bottom: 2rem;
 }
 
 .tab {
-  padding: 0.5rem 2rem;
-  border-radius: 9999px;
+  padding: 0.5rem 1.5rem;
+  border-radius: 999px;
   border: 1px solid var(--border-light);
-  background: none;
-  font-weight: 500;
+  background-color: white;
   color: var(--text-secondary);
+  font-size: 0.875rem;
+  font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s;
 }
 
 .tab.active {
-  background-color: rgba(76, 111, 255, 0.1);
-  color: var(--primary);
   border-color: var(--primary);
+  color: var(--primary);
+  background-color: rgba(76, 111, 255, 0.05);
 }
 
 .formContainer {
@@ -48,21 +53,25 @@
 .grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 2rem;
+  gap: 1.5rem;
 }
 
 .label {
   font-size: 0.875rem;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--text-primary);
-  margin-bottom: 0.5rem;
-  display: block;
+}
+
+.difficultyGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
 }
 
 .radioGroup {
   display: flex;
-  gap: 2rem;
-  margin-top: 1rem;
+  gap: 1.5rem;
+  margin-top: 0.5rem;
 }
 
 .radioLabel {
@@ -74,16 +83,51 @@
   cursor: pointer;
 }
 
+.radioLabel input {
+  accent-color: var(--primary);
+  width: 16px;
+  height: 16px;
+}
+
+.radioCircle {
+  display: none;
+}
+
+.markingScheme {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
 .markingGrid {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   gap: 1rem;
-  margin-top: 1rem;
 }
 
 .actions {
   display: flex;
   justify-content: flex-end;
   gap: 1rem;
-  margin-top: 2rem;
+  margin-top: 1rem;
+}
+
+.cancelBtn {
+  background-color: #f8f9fa;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-light);
+  padding: 0.75rem 2rem;
+  border-radius: var(--radius-md);
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.nextBtn {
+  background-color: var(--primary);
+  color: white;
+  border: none;
+  padding: 0.75rem 2.5rem;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  cursor: pointer;
 }

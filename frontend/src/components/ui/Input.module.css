@@ -1,38 +1,89 @@
 .container {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.5rem;
   width: 100%;
 }
 
 .label {
   font-size: 0.875rem;
   font-weight: 500;
-  color: var(--text-primary);
+  color: #475569; /* slate-600 */
 }
 
 .input {
-  padding: 0.75rem 1rem;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--border-light);
-  background-color: var(--bg-card);
+  padding: 0.625rem 0.875rem;
+  border-radius: 6px;
+  border: 1px solid #E2E8F0; /* slate-200 */
+  background-color: #FFFFFF;
   font-size: 0.875rem;
-  color: var(--text-primary);
+  color: #1E293B; /* slate-800 */
   outline: none;
-  transition: border-color 0.2s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
   width: 100%;
 }
 
+.input::placeholder {
+  color: #CBD5E1; /* slate-300 */
+}
+
 .input:focus {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(76, 111, 255, 0.1);
+  border-color: #6366F1; /* indigo-500 */
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
 }
 
 .inputError {
-  border-color: var(--danger);
+  border-color: #EF4444; /* red-500 */
 }
 
 .error {
   font-size: 0.75rem;
-  color: var(--danger);
+  color: #EF4444;
+}
+
+/* Specific styling for number inputs with increment/decrement arrows in Marking Scheme */
+.input[type="number"] {
+  -moz-appearance: textfield;
+  padding-right: 2rem; /* Make room for custom arrows */
+}
+
+.input[type="number"]::-webkit-outer-spin-button,
+.input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.inputWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.spinnerContainer {
+  position: absolute;
+  right: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  height: 100%;
+}
+
+.spinnerButton {
+  background: none;
+  border: none;
+  padding: 2px 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.spinnerButton svg path {
+  transition: stroke 0.2s;
+}
+
+.spinnerButton:hover svg path {
+  stroke: #475569;
 }

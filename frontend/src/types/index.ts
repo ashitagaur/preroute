@@ -54,4 +54,5 @@ export interface Question {
   topic_id?: string;
   sub_topic_id?: string;
   test_id?: string;
+  subject?: string;
 }

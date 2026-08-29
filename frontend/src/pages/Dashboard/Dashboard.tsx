@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { testService } from '../../services/test.service';
+import { useTestStore } from '../../store/useTestStore';
 import { Test } from '../../types';
 import styles from './Dashboard.module.css';
 
@@ -19,8 +20,22 @@ export const Dashboard: React.FC = () => {
     try {
       setLoading(true);
       const res: any = await testService.getAll();
-      if (res.success) {
-        setTests(res.data);
+      if (Array.isArray(res)) {
+        setTests(res);
+      } else if (res.success || res.status === 'success') {
+        if (Array.isArray(res.data)) {
+          setTests(res.data);
+        } else if (res.data && Array.isArray(res.data.tests)) {
+          setTests(res.data.tests);
+        } else if (res.data && Array.isArray(res.data.data)) {
+          setTests(res.data.data);
+        } else {
+          setTests([]); // Fallback
+        }
+      } else if (res.tests && Array.isArray(res.tests)) {
+        setTests(res.tests);
+      } else {
+        setTests([]);
       }
     } catch (error) {
       console.error('Failed to fetch tests', error);
@@ -36,7 +51,10 @@ export const Dashboard: React.FC = () => {
           <h1 className={styles.title}>Dashboard</h1>
           <p className={styles.subtitle}>Manage your tests and view their status</p>
         </div>
-        <Button onClick={() => navigate('/tests/create')}>Create New Test</Button>
+        <Button onClick={() => {
+          useTestStore.getState().clearDraft();
+          navigate('/tests/create');
+        }}>Create New Test</Button>
       </div>
 
       <Card className={styles.tableCard}>
@@ -68,7 +86,7 @@ export const Dashboard: React.FC = () => {
                   <td>{test.created_at ? new Date(test.created_at).toLocaleDateString() : 'N/A'}</td>
                   <td>
                     <div className={styles.actions}>
-                      <button className={styles.actionBtn} onClick={() => alert('View details not implemented')}>View</button>
+                      <button className={styles.actionBtn} onClick={() => navigate(`/tests/${test.id}/preview`)}>View</button>
                     </div>
                   </td>
                 </tr>

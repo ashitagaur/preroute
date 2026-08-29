@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'https://admin-moderator-backend-staging.up.railway.app/api';
+const API_BASE_URL = '/api';
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -28,9 +28,12 @@ apiClient.interceptors.response.use(
   (response) => response.data, // Unwrap the API response to get the actual data
   (error) => {
     if (error.response?.status === 401) {
-      // Clear token and redirect to login if unauthorized
+      // Clear token
       localStorage.removeItem('jwt_token');
-      window.location.href = '/login';
+      // Only redirect if not already on the login page to avoid wipe out state
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(error.response?.data || error.message);
   }

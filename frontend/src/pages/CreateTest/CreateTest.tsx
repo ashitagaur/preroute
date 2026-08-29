@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useForm, Controller } from 'react-hook-form';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Button } from '../../components/ui/Button';
+import toast from 'react-hot-toast';
 import { Input } from '../../components/ui/Input';
 import { Select } from '../../components/ui/Select';
 import { subjectService } from '../../services/subject.service';
@@ -30,6 +30,8 @@ type CreateTestForm = z.infer<typeof createTestSchema>;
 
 export const CreateTest: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const isEditMode = location.state?.edit;
   const setDraft = useTestStore((state) => state.setDraft);
   
   const [subjects, setSubjects] = useState<Subject[]>([]);
@@ -39,12 +41,16 @@ export const CreateTest: React.FC = () => {
   const {
     register,
     handleSubmit,
-    control,
     watch,
+    reset,
+    setValue,
     formState: { errors },
   } = useForm<CreateTestForm>({
     resolver: zodResolver(createTestSchema),
     defaultValues: {
+      subject: '',
+      topics: '',
+      sub_topics: '',
       difficulty: 'easy',
       wrong_marks: -1,
       unattempt_marks: 0,
@@ -52,20 +58,41 @@ export const CreateTest: React.FC = () => {
     }
   });
 
+  const draft = useTestStore((state) => state.draft);
+
+  useEffect(() => {
+    if (isEditMode && draft) {
+      reset({
+        name: draft.name || '',
+        difficulty: (draft.difficulty as 'easy' | 'medium' | 'difficult') || 'easy',
+        total_time: draft.total_time,
+        wrong_marks: draft.wrong_marks || -1,
+        unattempt_marks: draft.unattempt_marks || 0,
+        correct_marks: draft.correct_marks || 5,
+        total_questions: draft.total_questions,
+        total_marks: draft.total_marks || ((draft.total_questions || 0) * (draft.correct_marks || 5)),
+      });
+    } else if (!isEditMode && draft) {
+      useTestStore.getState().clearDraft();
+    }
+  }, [isEditMode, draft, reset]);
+
   const selectedSubject = watch('subject');
   const selectedTopic = watch('topics');
 
   useEffect(() => {
     // Fetch subjects on load
     subjectService.getAllSubjects().then((res: any) => {
-      if (res.success) setSubjects(res.data);
+      const data = Array.isArray(res) ? res : res.data;
+      if (data && Array.isArray(data)) setSubjects(data);
     });
   }, []);
 
   useEffect(() => {
     if (selectedSubject) {
       subjectService.getTopicsBySubject(selectedSubject).then((res: any) => {
-        if (res.success) setTopics(res.data);
+        const data = Array.isArray(res) ? res : res.data;
+        if (data && Array.isArray(data)) setTopics(data);
       });
     }
   }, [selectedSubject]);
@@ -73,12 +100,50 @@ export const CreateTest: React.FC = () => {
   useEffect(() => {
     if (selectedTopic) {
       subjectService.getSubTopicsByTopic(selectedTopic).then((res: any) => {
-        if (res.success) setSubTopics(res.data);
+        const data = Array.isArray(res) ? res : res.data;
+        if (data && Array.isArray(data)) setSubTopics(data);
       });
     }
   }, [selectedTopic]);
 
+  // Safe cascaded resolution of IDs from names
+  useEffect(() => {
+    if (isEditMode && draft && subjects.length > 0) {
+      const draftSubject = draft.subjectName || draft.subject || '';
+      const matchingSubject = subjects.find(s => s.id === draftSubject || s.name === draftSubject);
+      if (matchingSubject && watch('subject') !== matchingSubject.id) {
+        setValue('subject', matchingSubject.id);
+      }
+    }
+  }, [isEditMode, draft, subjects, setValue, watch]);
+
+  useEffect(() => {
+    if (isEditMode && draft && topics.length > 0) {
+      const draftTopic = draft.topicName || draft.topics?.[0] || '';
+      const matchingTopic = topics.find(t => t.id === draftTopic || t.name === draftTopic);
+      if (matchingTopic && watch('topics') !== matchingTopic.id) {
+        setValue('topics', matchingTopic.id);
+      }
+    }
+  }, [isEditMode, draft, topics, setValue, watch]);
+
+  useEffect(() => {
+    if (isEditMode && draft && subTopics.length > 0) {
+      const draftSubTopic = draft.subTopicName || draft.sub_topics?.[0] || '';
+      const matchingSubTopic = subTopics.find(st => st.id === draftSubTopic || st.name === draftSubTopic);
+      if (matchingSubTopic && watch('sub_topics') !== matchingSubTopic.id) {
+        setValue('sub_topics', matchingSubTopic.id);
+      }
+    }
+  }, [isEditMode, draft, subTopics, setValue, watch]);
+
   const onSubmit = async (data: CreateTestForm) => {
+    // 1. requested constraint: right ans <= total questions
+    if (data.correct_marks > data.total_questions) {
+      toast.error(`Correct Answer marks (${data.correct_marks}) must be less than or equal to Total Questions (${data.total_questions})`);
+      return;
+    }
+
     try {
       const apiPayload = {
         name: data.name,
@@ -96,14 +161,36 @@ export const CreateTest: React.FC = () => {
         status: 'draft' as const
       };
 
-      const res: any = await testService.create(apiPayload);
-      if (res.success) {
-        setDraft({ ...apiPayload, id: res.data.id });
-        navigate(`/tests/${res.data.id}/questions`);
+      let res: any;
+      if (draft && draft.id) {
+        res = await testService.update(draft.id, apiPayload);
+      } else {
+        res = await testService.create(apiPayload);
       }
-    } catch (err) {
+      
+      if (res.success || res.status === 'success') {
+        const subjectName = subjects.find(s => s.id === data.subject)?.name || 'English';
+        const topicName = topics.find(t => t.id === data.topics)?.name || 'Grammar';
+        const subTopicName = subTopics.find(st => st.id === data.sub_topics)?.name || 'Application';
+
+        // Keep existing questions if updating
+        const existingQuestions = draft && draft.id ? draft.questions : [];
+
+        setDraft({ 
+          ...apiPayload, 
+          id: draft && draft.id ? draft.id : res.data.id,
+          subjectName,
+          topicName,
+          subTopicName,
+          questions: existingQuestions
+        });
+        
+        const testId = draft && draft.id ? draft.id : res.data.id;
+        navigate(`/tests/${testId}/questions`);
+      }
+    } catch (err: any) {
       console.error(err);
-      alert('Failed to create test');
+      toast.error(`Failed to ${draft ? 'update' : 'create'} test: ` + (err.message || 'Validation failed'));
     }
   };
 
@@ -124,7 +211,9 @@ export const CreateTest: React.FC = () => {
           <Select 
             label="Subject" 
             options={subjects.map(s => ({ value: s.id, label: s.name }))} 
+            placeholder="Choose from Drop-down"
             {...register('subject')} 
+            value={watch('subject')}
             error={errors.subject?.message}
           />
           <Input 
@@ -136,13 +225,17 @@ export const CreateTest: React.FC = () => {
           <Select 
             label="Topic" 
             options={topics.map(t => ({ value: t.id, label: t.name }))} 
+            placeholder="Choose from Drop-down"
             {...register('topics')} 
+            value={watch('topics')}
             error={errors.topics?.message}
           />
           <Select 
             label="Sub Topic" 
             options={subTopics.map(st => ({ value: st.id, label: st.name }))} 
+            placeholder="Choose from Drop-down"
             {...register('sub_topics')} 
+            value={watch('sub_topics')}
             error={errors.sub_topics?.message}
           />
         </div>
@@ -150,25 +243,32 @@ export const CreateTest: React.FC = () => {
         <div className={styles.grid}>
           <Input 
             label="Duration (Minutes)" 
-            type="number" 
             placeholder="Enter the time" 
             {...register('total_time')} 
             error={errors.total_time?.message}
           />
-          
           <div className={styles.difficultyGroup}>
             <label className={styles.label}>Test Difficulty Level</label>
             <div className={styles.radioGroup}>
               <label className={styles.radioLabel}>
                 <input type="radio" value="easy" {...register('difficulty')} />
+                <div className={styles.radioCircle}>
+                  <div className={styles.radioDot}></div>
+                </div>
                 Easy
               </label>
               <label className={styles.radioLabel}>
                 <input type="radio" value="medium" {...register('difficulty')} />
+                <div className={styles.radioCircle}>
+                  <div className={styles.radioDot}></div>
+                </div>
                 Medium
               </label>
               <label className={styles.radioLabel}>
                 <input type="radio" value="difficult" {...register('difficulty')} />
+                <div className={styles.radioCircle}>
+                  <div className={styles.radioDot}></div>
+                </div>
                 Difficult
               </label>
             </div>
@@ -181,14 +281,14 @@ export const CreateTest: React.FC = () => {
             <Input label="Wrong Answer" type="number" {...register('wrong_marks')} />
             <Input label="Unattempted" type="number" {...register('unattempt_marks')} />
             <Input label="Correct Answer" type="number" {...register('correct_marks')} />
-            <Input label="No of Questions" type="number" placeholder="Ex: 50" {...register('total_questions')} />
-            <Input label="Total Marks" type="number" placeholder="Ex: 250" {...register('total_marks')} />
+            <Input label="No of Questions" type="number" placeholder="Ex:250 Marks" {...register('total_questions')} />
+            <Input label="Total Marks" type="number" placeholder="Ex:250 Marks" {...register('total_marks')} />
           </div>
         </div>
 
         <div className={styles.actions}>
-          <Button type="button" variant="secondary" onClick={() => navigate('/dashboard')}>Cancel</Button>
-          <Button type="submit">Next</Button>
+          <button type="button" className={styles.cancelBtn} onClick={() => navigate('/dashboard')}>Cancel</button>
+          <button type="submit" className={styles.nextBtn}>Next</button>
         </div>
       </form>
     </div>

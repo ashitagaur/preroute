@@ -4,7 +4,7 @@ import { useAuthStore } from '../../store/useAuthStore';
 import styles from './Layout.module.css';
 
 export const Header: React.FC = () => {
-  const { user, logout } = useAuthStore();
+  const logout = useAuthStore((state) => state.logout);
 
   return (
     <header className={styles.header}>
