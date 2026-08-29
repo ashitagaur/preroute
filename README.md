@@ -69,3 +69,27 @@ frontend/
 2. **Component-Driven UI:** Primitive elements like standard Inputs and Select dropdowns are extracted into reusable components. This guarantees a consistent design language across the application and makes global styling changes trivial.
 3. **Data Flow & Draft Recovery:** The test creation process is a multi-step wizard (`CreateTest` -> `AddQuestions` -> `PreviewPublish`). To manage this, data is continuously synced to a global Zustand store (`useTestStore`). If the user leaves the page or refreshes, the app seamlessly recovers the draft ID and question arrays from local storage.
 4. **Vercel Production Ready:** The repository includes a `vercel.json` configuration file at the root of the frontend folder to enforce SPA rewrites. This ensures that direct deep links (e.g., `/tests/create`) are properly routed to `index.html` by the Vercel edge network instead of throwing 404 errors.
+
+---
+
+## ✅ Implemented Features (Completed Flow)
+
+The application currently supports the complete core end-to-end flow for test creation:
+
+1. **Secure Login:** JWT-authenticated login screen that redirects successfully authenticated users to the dashboard.
+2. **Dashboard Management:** A central hub to view all previously created tests, displaying vital metadata (status, created date, subject).
+3. **Test Configuration (Create Test):** A robust wizard to define the test's Subject, Topic, Sub-topic, and mathematical Marking Scheme. Includes strict validation (e.g. `Correct Marks <= Total Questions`).
+4. **Manual Question Editor:** A fully functional UI to manually add MCQ questions. Features a dynamic sidebar that tracks exactly how many questions are left to complete.
+5. **Granular Categorization:** The ability to assign a specific difficulty level, topic, and subtopic to *individual* questions via dynamic dropdowns.
+6. **Preview Mode:** A read-only verification screen that allows administrators to review all drafted questions before committing them.
+7. **Publishing Workflow:** The ability to set a "Live Until" schedule and successfully convert a Draft into a Live test, returning the user to the updated dashboard.
+
+---
+
+## 🚀 Future Enhancements
+
+The UI architecture has been laid out for the following advanced features, which are scheduled for upcoming development sprints:
+
+1. **CSV Bulk Upload:** The "Upload CSV" button is present in the UI. Future integration with a parser (like `PapaParse`) will allow educators to upload hundreds of questions instantly, mapping them directly to the draft store.
+2. **Rich Text Formatting Bar:** The visual editor toolbar (Bold, Italics, Links) is designed but not yet wired to output raw HTML. Integration with libraries like `React-Quill` or `TipTap` will enable complex text formatting.
+3. **Image Upload Support:** The architecture is prepared for a drag-and-drop zone to attach images (e.g., mathematical graphs). This will require integration with a cloud storage bucket (AWS S3 / Cloudinary) to upload the file and store the resulting URL in the question payload.
