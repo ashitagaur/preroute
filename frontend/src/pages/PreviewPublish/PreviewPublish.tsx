@@ -80,7 +80,13 @@ export const PreviewPublish: React.FC = () => {
     }
   };
 
-  const activeTest = viewTest || (isDraftMode ? draft : null);
+  const activeQuestions = (viewTest?.questions && viewTest.questions.length > 0)
+    ? viewTest.questions
+    : (isDraftMode ? draft?.questions : []);
+
+  const activeTest = viewTest 
+    ? { ...viewTest, questions: activeQuestions } 
+    : (isDraftMode && draft ? { ...draft, questions: draft.questions } : null);
 
   if (loading && !activeTest) {
     return (
